@@ -2,9 +2,8 @@ library(TED)
 library(changepoint)
 
 #Load the data
-data <- read.csv(file="D:/10工程项目/PycharmProjects/Artt/R/TSdata4_20150513_20150514.csv", header=T)
-# setwd("/mnt/PycharmProject/Artt/data")
-# data <- read.csv(file="TSdata4_20150513_20150514.csv", header=T)
+setwd("/mnt/PycharmProject/Artt/data")
+data <- read.csv(file="TSdata4_20150513_20150514.csv", header=T)
 # data <- read.csv(file="TSdata4_20150612_20150613.csv", header=T)
 # data <- read.csv(file="TSdata4_20151129_20151203.csv", header=T)
 row.no = nrow(data)

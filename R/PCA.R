@@ -26,8 +26,9 @@ set.seed(123)
 #Generate ARMA(1,1) time series
 period = 128
 piece = 21
-links.No.list = c(50, 100, 200, 400, 800, 1600, 3200)
-links.No = links.No.list[7]
+#links.No.list = c(50, 100, 200, 400, 800, 1600, 3200)
+links.No.list = c(150, 300, 600, 1200)
+links.No = links.No.list[4]
 ts.length = period * piece
 all.ts = matrix(NA,links.No, ts.length)
 for (i in 1:links.No){
@@ -216,3 +217,47 @@ for (no in 1:nrow(fix.events.period)){
 cat("average jaccard =", avrjac/realno, "\n")
 cat("average characterization time cost = ", avrchat/realno, "\n")
 }
+
+# # Real data
+# # Load the data
+# setwd("/mnt/PycharmProject/Artt/data")
+# data <- read.csv(file="TSdata4_20150513_20150514.csv", header=T)
+# #data <- read.csv(file="TSdata4_20150612_20150613.csv", header=T)
+# #data <- read.csv(file="TSdata4_20151129_20151203.csv", header=T)
+# data = data[,-1]
+# col.no = ncol(data)
+# data = data[,-col.no]
+# w = 5
+# spelist = c()
+# Qlist = c()
+# for (i in 1:(nrow(data)-w+1)){
+#   split.data <- data[i:(i+w-1),]
+#   s = svd(split.data)
+#   nor.no = 4
+#   noise.no = 1
+#   nor.eigen = c(s$d[1:nor.no],rep(0, times = noise.no ))
+#   noise.eighen = c(rep(0,times = nor.no),s$d[(nor.no+1):length(s$d)])
+#   D.nor = diag(nor.eigen)
+#   D.noise = diag(noise.eighen)
+#   nor.space = s$u %*% D.nor %*% t(s$v)
+#   noise.space = s$u %*% D.noise %*% t(s$v)
+#   spe = sum(noise.space^2)
+#   spelist = c(spelist, spe)
+#   # Q-statistic
+#   theta.1 = sum(noise.eighen)
+#   theta.2 = sum(noise.eighen^2)
+#   theta.3 = sum(noise.eighen^3)
+#   h0 = 1-(2*theta.1*theta.3)/(3*(theta.2^2))
+#   Q.part1 = (1.645*(2*theta.2*(h0^2))^0.5)/theta.1
+#   Q.part2 = theta.2*h0*(h0-1)/(theta.1^2)
+#   Q = theta.1*((Q.part1+1+Q.part2)^(1/h0))
+#   Qlist = c(Qlist, Q)
+#   # cat("spe = ", spe, "Q =", Q, "\n")
+# }
+# 
+# spelist = c(rep(0,(w-1)), spelist)
+# Qlist = c(rep(0,(w-1)), Qlist)
+# ts.plot(spelist)
+# dif = spelist - Qlist
+# ano.points = c(which(dif>0))
+# abline(v=ano.points,lwd=2,col='red')

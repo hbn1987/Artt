@@ -1,13 +1,22 @@
 library(TED)
 library(changepoint)
 
-set.seed(123) 
+avrpre = 0
+avrre = 0
+avrjc = 0
+
+avrdc = 0
+
+for (seed in 1:10){
+set.seed(seed) 
 
 #Generate ARMA(1,1) time series
-period = 128
+events.No = 10
 piece = 21
-links.No.list = c(50, 100, 200, 400, 800, 1600, 3200)
-links.No = links.No.list[7]
+
+period = 128
+links.No.list = c(50, 100, 150, 200, 300, 400, 600, 800, 1200, 1600, 2400, 3200)
+links.No = links.No.list[12]
 ts.length = period * piece
 all.ts = matrix(NA,links.No, ts.length)
 for (i in 1:links.No){
@@ -31,7 +40,7 @@ for (i in 1:links.No){
 # abline(v=all.changepoints,lwd=2,col='red')
 
 #Creates a matrix to record anomalous links
-events.No = 10
+
 events.link.No = 50 
 pointer = 0
 events.links = matrix(0,events.No,links.No)
@@ -61,14 +70,13 @@ for (x in 1: links.No){
   }
 }
 
-#Changepoint detection for one time series
+# #Changepoint detection for one time series
 # one.test = all.ts[1,]
-# par(mar=c(5,5,3,3))
+# #par(mar=c(5,5,3,3))
 # plot(one.test,type='l',ylab='',xlab='Time Tick',yaxt='n')
 # axis(side=2,at=c(-2,0,2,4,6,8),labels = c(2,4,6,8,10,12))
 # change=cpt.meanvar(one.test, test.stat = "Normal", method = "PELT", penalty="MBIC", minseglen=3)
 # one.changepoints = c(cpts.ts(change))
-# 
 # abline(v=one.changepoints,lwd=2,col='red')
 
 # 1st changepoint detection
@@ -86,24 +94,24 @@ if (length(location)>0){
 }
 }
 
-# par(mfrow=c(3,1),mar=c(5,5,2,2)) 
-# ts.plot(all.changes[1,],xlab='Time Tick',ylab='Change-points',sub='(a)')
+#par(mfrow=c(3,1),mar=c(5,5,2,2))
+#ts.plot(all.changes[1,],xlab='Time Tick',ylab='Change-points',sub='(a)')
 # Shows the real exception moment
 points.start = c()
-for (k in 0:9){points.start=c(points.start,(period*(2*k+1)+1))}
+for (k in 0:(events.No-1)){points.start=c(points.start,(period*(2*k+1)+1))}
 points.end = points.start+period
-
 # abline(v=points.start,lwd=2,col='blue')
 # abline(v=points.end,lwd=2,col='green')
-
 # ts.plot(all.changes[1,],xlab='Time Tick',ylab='Change-points',sub='(b)')
+
 # 2nd changepoint detection
 change=cpt.meanvar(all.changes[1,], test.stat = "Normal", method = "PELT", penalty="BIC", minseglen=5)
 all.changepoints = c(cpts.ts(change))
 t2 = proc.time()
-cat("detection time cost = ", t2[3] - t1[3], "\n")
-# abline(v=all.changepoints,lwd=2,col='red')
-# ts.plot(all.changes[1,],xlab='Time Tick',ylab='Change-points',sub='(c)')
+dc =  t2[3] - t1[3]
+#cat("detection time cost = ", dc, "\n")
+#abline(v=all.changepoints,lwd=2,col='red')
+#ts.plot(all.changes[1,],xlab='Time Tick',ylab='Change-points',sub='(c)')
 
 # Aggregate adjacent changepoints
 point.range=1.5*period
@@ -120,12 +128,12 @@ while(i<length(all.changepoints)-1){
       end=j
       break}
   }
-  
+
   fix.changepoint=c(fix.changepoint,all.changepoints[i],all.changepoints[j-1])
   i=j
 }
 
-# abline(v=fix.changepoint,lwd=2,col='red')
+#abline(v=fix.changepoint,lwd=2,col='red')
 # event detection with TED method, poor effect!
 # specify a sliding window size 
 # w <- 128 
@@ -183,8 +191,12 @@ for (i in 1:length(points.start)){
 
 precision = (nrow(events.period)-fp)/nrow(events.period)
 recall = tp/events.No
+cat("seed = ", seed, "\n")
 cat("precision = ", precision, "\n")
 cat("recall = ", recall, "\n")
+avrpre = avrpre + precision
+avrre = avrre + recall
+avrdc = avrdc + dc
 
 
 # Gets the link where the changepoint exists at the moment of the exception
@@ -193,7 +205,7 @@ avrjac = 0
 avrchat = 0
 for (no in 1:nrow(fix.events.period)){
   events.period = fix.events.period[no,1:2]
-  detected.NO=fix.events.period[no,3] 
+  detected.NO=fix.events.period[no,3]
   event.period = events.period[2]-events.period[1]+1
   suspicious.links = matrix(NA,1,event.period)
   suspicious.links.index=c()
@@ -210,11 +222,11 @@ for (no in 1:nrow(fix.events.period)){
     }
   }
   suspicious.links=suspicious.links[-1,]
-  
+
   # Characterization
   # Calculation of the distance
   library("dtwclust")
-  
+
   t3 = proc.time()
   dis = proxy::dist(suspicious.links, method = "SBD",znorm = TRUE)
   # MDS
@@ -227,25 +239,25 @@ for (no in 1:nrow(fix.events.period)){
   # Event involved links
   event.involved.links=which(events.links[detected.NO,]==1)
   Anomaly = ifelse(suspicious.links.index %in% event.involved.links,'Yes','No')
-  
+
   ts2point = data.frame(X,Y,Anomaly)
-  
+
   # Display
   library(ggplot2)
   library(gridExtra)
-  p1=ggplot(ts2point, aes(x=X, y=Y, colour=Anomaly,shape=Anomaly)) + geom_point(size=1) + scale_color_manual(values=c("blue", "red")) + scale_shape_manual(values=c(3,1))+ggtitle("(a) MDS")+theme(plot.title = element_text(hjust = 0.5)) 
+  #p1=ggplot(ts2point, aes(x=X, y=Y, colour=Anomaly,shape=Anomaly)) + geom_point(size=1) + scale_color_manual(values=c("blue", "red")) + scale_shape_manual(values=c(3,1))+ggtitle("(a) MDS")+theme(plot.title = element_text(hjust = 0.5))
   kde = kde2d(X,Y)
   t4 = proc.time()
   chat = t4[3] - t3[3]
   avrchat = avrchat + chat
-  
+
   # Heatmap
   # library(RColorBrewer)
   # cols = brewer.pal(5,"YlOrRd")
   # pal<-colorRampPalette(cols)
   # image(kde,col=pal(20))
-  p2=ggplot(data = ts2point, mapping = aes(x = X, y = Y)) + geom_point(size=1) +stat_density2d()+ggtitle("(b) KDE")+theme(plot.title = element_text(hjust = 0.5))
-  grid.arrange(p1,p2,nrow=1)
+  #p2=ggplot(data = ts2point, mapping = aes(x = X, y = Y)) + geom_point(size=1) +stat_density2d()+ggtitle("(b) KDE")+theme(plot.title = element_text(hjust = 0.5))
+  #grid.arrange(p1,p2,nrow=1)
   # Calculate the k points closest to the density center
   density.center.index = which(kde$z == max(kde$z))
   density.center.row = density.center.index%%25
@@ -264,9 +276,16 @@ for (no in 1:nrow(fix.events.period)){
   knn.index.global = suspicious.links.index[knn.index]
   num = knn.index.global %in% event.involved.links
   jaccard = length(intersect(knn.index.global, event.involved.links))/length(union(knn.index.global, event.involved.links))
-  cat("event number = ", no, "jaccard =", jaccard, "\n")
+  #cat("event number = ", no, "jaccard =", jaccard, "\n")
   avrjac = avrjac + jaccard
   realno = realno + 1
 }
-cat("average jaccard = ", avrjac/realno, "\n")
-cat("average characterization time cost = ", avrchat/realno, "\n")
+cat("jaccard = ", avrjac/realno, "\n")
+avrjc = avrjc + avrjac/realno
+# cat("average characterization time cost = ", avrchat/realno, "\n")
+
+}
+cat("avr precision = ", avrpre/10, "\n")
+cat("avr recall = ", avrre/10, "\n")
+#cat("avrdc = ", avrdc/10, "\n")
+cat("avr jac = ", avrjc/10, "\n")

@@ -1,4 +1,5 @@
-# Artt: Detection and characterization network anomalies using large-scale RTT time series.
+# Artt
+> Bingnan Hou, Changshen Hou, Tongqing Zhou, Zhiping Cai, Fang Liu, "Detection and characterization network anomalies using large-scale RTT time series," TNSM, 2021.
 
 # Files
 - Artt includes .R and .py files. The .R files implement the algorithms in Artt and the .py files implement the data collection from RIPE Atlas and data preprocessing.

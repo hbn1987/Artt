@@ -27,8 +27,9 @@ set.seed(123)
 #Generate RTT time series
 period = 128
 piece = 21
-links.No.list = c(50, 100, 200, 400, 800, 1600, 3200)
-links.No = links.No.list[7]
+#links.No.list = c(50, 100, 200, 400, 800, 1600, 3200)
+links.No.list = c(150, 300, 600, 1200)
+links.No = links.No.list[4]
 ts.length = period * piece
 all.ts = matrix(NA,links.No, ts.length)
 for (i in 1:links.No){
@@ -205,8 +206,7 @@ cat("average characterization time cost = ", avrchat/realno, "\n")
 
 
 # Real data
-#Load the data
-# data <- read.csv(file="D:/10??????Ŀ/PycharmProjects/Artt/R/TSdata4_20150513_20150514.csv", header=T)
+# Load the data
 # setwd("/mnt/PycharmProject/Artt/data")
 # data <- read.csv(file="TSdata4_20150513_20150514.csv", header=T)
 # data <- read.csv(file="TSdata4_20150612_20150613.csv", header=T)
